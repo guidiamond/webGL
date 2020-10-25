@@ -34,6 +34,10 @@ function init() {
   }
   gl.clearColor(0.75, 0.85, 0.8, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  gl.enable(gl.DEPTH_TEST);
+  gl.enable(gl.CULL_FACE);
+  gl.frontFace(gl.CCW);
+  gl.cullFace(gl.BACK);
 
   const vertexShader = gl.createShader(gl.VERTEX_SHADER);
   const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
@@ -143,6 +147,9 @@ function init() {
   gl.uniformMatrix4fv(matViewUniformLocation, gl.FALSE, viewMatrix);
   gl.uniformMatrix4fv(matProjUniformLocation, gl.FALSE, projMatrix);
 
+  let xRotationMatrix = new Float32Array(16);
+  let yRotationMatrix = new Float32Array(16);
+
   //
   // Main render loop
   //
@@ -151,7 +158,9 @@ function init() {
   mat4.identity(identityMatrix);
   let loop = function () {
     angle = (performance.now() / 1000 / 6) * 2 * Math.PI; // one rotation every 6secs
-    mat4.rotate(worldMatrix, identityMatrix, angle, [0, 1, 0]);
+    mat4.rotate(yRotationMatrix, identityMatrix, angle, [0, 1, 0]);
+    mat4.rotate(xRotationMatrix, identityMatrix, angle / 4, [1, 0, 0]);
+    mat4.mul(worldMatrix, xRotationMatrix, yRotationMatrix); // rotate in multiple axis
     gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
 
     gl.clearColor(0.75, 0.85, 0.8, 1.0);
