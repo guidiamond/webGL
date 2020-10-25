@@ -35,9 +35,9 @@ function init() {
   gl.clearColor(0.75, 0.85, 0.8, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   gl.enable(gl.DEPTH_TEST);
-  gl.enable(gl.CULL_FACE);
+  //gl.enable(gl.CULL_FACE);
   gl.frontFace(gl.CCW);
-  gl.cullFace(gl.BACK);
+  //gl.cullFace(gl.BACK);
 
   const vertexShader = gl.createShader(gl.VERTEX_SHADER);
   const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
@@ -77,26 +77,23 @@ function init() {
     console.log("Error validating program!", gl.getProgramInfoLog(program));
     return;
   }
-  const triangleVertices = [
-    0.0, //  x
-    0.5, //  y
-    0.0, //  z
-    1.0, // R
-    1.0, // G
-    0.0, // B
-    -0.5, // x
-    -0.5, // y
-    0.0, //  z
-    0.7, // R
-    0.0, // G
-    1.0, // B
-    0.5, //  x
-    -0.5, // y
-    0.0, //  z
-    0.1, // R
-    1.0, // G
-    0.6, // B
-  ]; // [x,y, R, G, B] format
+    const triangleVertices = [ 
+    // Base
+       0.0,  0.0,  1.0,        0.6,0.8,0.4,  // v1
+      -1.0,  1.0, -1.0,        1.0,0.6,0.9,  // v2
+       1.0,  1.0, -1.0,        0.4,0.3,0.2,  // v3
+       1.0, -1.0, -1.0,        0.8,1.0,0.3,  // v4
+      -1.0, -1.0, -1.0,        0.3,0.2,0.7,  // v5
+	];
+
+  const piramidIndices = [
+    1,2,4,
+    4,2,3,
+    1,2,0,
+    2,3,0,
+    3,4,0,
+    4,1,0
+	];
   const triangleVertexBufferObject = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexBufferObject); // bind the created array buffer to the newly created buffer
   gl.bufferData(
@@ -104,12 +101,21 @@ function init() {
     new Float32Array(triangleVertices), // javascript uses 64bit numbers but openGL 32bit
     gl.STATIC_DRAW // sending data from cpu memory to gpu memory (static means it's not going 2 be changed overtime)
   ); // uses the currently active buffer (latest bound)
+
+  const piramidIndexBufferObject = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, piramidIndexBufferObject);
+  gl.bufferData(
+    gl.ELEMENT_ARRAY_BUFFER,
+    new Uint16Array(piramidIndices),
+    gl.STATIC_DRAW
+  );
+
   let positionAttribLocation = gl.getAttribLocation(program, "vertPosition"); // (which program u're using, name of the used attribute)
   let colorAttribLocation = gl.getAttribLocation(program, "vertColor");
   // atribute layout
   gl.vertexAttribPointer(
     positionAttribLocation, // attribute location
-    2, // number of elements per attribute
+    3, // number of elements per attribute
     gl.FLOAT, // Type of elements
     gl.FALSE, // is normalized
     6 * Float32Array.BYTES_PER_ELEMENT, // Size of an individual vertex
@@ -135,7 +141,7 @@ function init() {
   let viewMatrix = new Float32Array(16);
   let projMatrix = new Float32Array(16);
   mat4.identity(worldMatrix);
-  mat4.lookAt(viewMatrix, [0, 0, -2], [0, 0, 0], [0, 1, 0]);
+  mat4.lookAt(viewMatrix, [0, 0, -8], [0, 0, 0], [0, 1, 0]);
   mat4.perspective(
     projMatrix,
     glMatrix.toRadian(45),
@@ -153,11 +159,12 @@ function init() {
   //
   // Main render loop
   //
-  let angle = 0;
+  let angle = 0; // defined outsite out loop for performance reasons
   let identityMatrix = new Float32Array(16);
   mat4.identity(identityMatrix);
   let loop = function () {
-    angle = (performance.now() / 1000 / 6) * 2 * Math.PI; // one rotation every 6secs
+    rotationTime = 3;
+    angle = (performance.now() / 1000 / rotationTime) * 2 * Math.PI; // one rotation every rotationTime secs
     mat4.rotate(yRotationMatrix, identityMatrix, angle, [0, 1, 0]);
     mat4.rotate(xRotationMatrix, identityMatrix, angle / 4, [1, 0, 0]);
     mat4.mul(worldMatrix, xRotationMatrix, yRotationMatrix); // rotate in multiple axis
@@ -166,10 +173,9 @@ function init() {
     gl.clearColor(0.75, 0.85, 0.8, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     // params (gl.RenderFormat, how many vertices to skip, how many points are being drawed)
-    gl.drawArrays(gl.TRIANGLES, 0, 3); // uses currently bound buffer
+    gl.drawElements(gl.TRIANGLES, piramidIndices.length, gl.UNSIGNED_SHORT, 0); // uses currently bound buffer
 
     requestAnimationFrame(loop);
   };
   requestAnimationFrame(loop);
 }
-
