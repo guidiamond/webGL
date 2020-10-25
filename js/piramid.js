@@ -1,43 +1,31 @@
-const vertexShaderText = [
-  "precision mediump float;",
-  "",
-  "attribute vec3 vertPosition;",
-  "attribute vec3 vertColor;",
-  "varying vec3 fragColor;",
-  "uniform mat4 mWorld;", // rotating the piramid in 3D space
-  "uniform mat4 mView;", // where the camera is sitting at
-  "uniform mat4 mProj;",
-  "",
-  "void main() {",
-  "  fragColor = vertColor;",
-  "  gl_Position = mProj * mView * mWorld * vec4(vertPosition, 1.0);",
-  "}",
-].join("\n");
+const triangleVertices = [ 
+  // Base
+  0.0,  0.0,  1.0,        0.6,0.8,0.4,   // v0
+  -1.0,  1.0, -1.0,        1.0,0.6,0.9,  // v1
+  1.0,  1.0, -1.0,        0.4,0.3,0.2,   // v2
+  1.0, -1.0, -1.0,        0.8,1.0,0.3,   // v3
+  -1.0, -1.0, -1.0,        0.3,0.2,0.7,  // v4
+];
 
-const fragmentShaderText = [
-  "precision mediump float;",
-  "varying vec3 fragColor;",
-  "",
-  "void main() {",
-  "  gl_FragColor = vec4(fragColor, 1.0);", // rgba format
-  "}",
-].join("\n");
+const piramidIndices = [
+  1,2,4,
+  4,2,3,
+  1,2,0,
+  2,3,0,
+  3,4,0,
+  4,1,0
+];
+
 
 function init() {
-  console.log("this is working");
-  let canvas = document.getElementById("opengl-surface");
+  let canvas = document.getElementById("opengl-surface"); // get canvas id from html template
   let gl = canvas.getContext("webgl");
-  //let vertices = new Float32Array(PiramidPositions);
   if (!gl) {
     console.log("Your browser doesn't support WEBGL!");
     return;
   }
-  gl.clearColor(0.75, 0.85, 0.8, 1.0);
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   gl.enable(gl.DEPTH_TEST);
-  //gl.enable(gl.CULL_FACE);
   gl.frontFace(gl.CCW);
-  //gl.cullFace(gl.BACK);
 
   const vertexShader = gl.createShader(gl.VERTEX_SHADER);
   const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
@@ -77,23 +65,6 @@ function init() {
     console.log("Error validating program!", gl.getProgramInfoLog(program));
     return;
   }
-    const triangleVertices = [ 
-    // Base
-       0.0,  0.0,  1.0,        0.6,0.8,0.4,  // v1
-      -1.0,  1.0, -1.0,        1.0,0.6,0.9,  // v2
-       1.0,  1.0, -1.0,        0.4,0.3,0.2,  // v3
-       1.0, -1.0, -1.0,        0.8,1.0,0.3,  // v4
-      -1.0, -1.0, -1.0,        0.3,0.2,0.7,  // v5
-	];
-
-  const piramidIndices = [
-    1,2,4,
-    4,2,3,
-    1,2,0,
-    2,3,0,
-    3,4,0,
-    4,1,0
-	];
   const triangleVertexBufferObject = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexBufferObject); // bind the created array buffer to the newly created buffer
   gl.bufferData(
@@ -140,8 +111,10 @@ function init() {
   let worldMatrix = new Float32Array(16);
   let viewMatrix = new Float32Array(16);
   let projMatrix = new Float32Array(16);
+
   mat4.identity(worldMatrix);
   mat4.lookAt(viewMatrix, [0, 0, -8], [0, 0, 0], [0, 1, 0]);
+
   mat4.perspective(
     projMatrix,
     glMatrix.toRadian(45),
@@ -153,11 +126,11 @@ function init() {
   gl.uniformMatrix4fv(matViewUniformLocation, gl.FALSE, viewMatrix);
   gl.uniformMatrix4fv(matProjUniformLocation, gl.FALSE, projMatrix);
 
-  let xRotationMatrix = new Float32Array(16);
-  let yRotationMatrix = new Float32Array(16);
+  const xRotationMatrix = new Float32Array(16);
+  const yRotationMatrix = new Float32Array(16);
 
   //
-  // Main render loop
+  // Render loop
   //
   let angle = 0; // defined outsite out loop for performance reasons
   let identityMatrix = new Float32Array(16);
@@ -165,6 +138,7 @@ function init() {
   let loop = function () {
     rotationTime = 3;
     angle = (performance.now() / 1000 / rotationTime) * 2 * Math.PI; // one rotation every rotationTime secs
+    // Rotation
     mat4.rotate(yRotationMatrix, identityMatrix, angle, [0, 1, 0]);
     mat4.rotate(xRotationMatrix, identityMatrix, angle / 4, [1, 0, 0]);
     mat4.mul(worldMatrix, xRotationMatrix, yRotationMatrix); // rotate in multiple axis
