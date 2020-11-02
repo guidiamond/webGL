@@ -1,21 +1,3 @@
-const triangleVertices = [ 
-  // Base
-  0.0,  0.0,  1.0,        0.6,0.8,0.4,   // v0
-  -1.0,  1.0, -1.0,        1.0,0.6,0.9,  // v1
-  1.0,  1.0, -1.0,        0.4,0.3,0.2,   // v2
-  1.0, -1.0, -1.0,        0.8,1.0,0.3,   // v3
-  -1.0, -1.0, -1.0,        0.3,0.2,0.7,  // v4
-];
-
-const piramidIndices = [
-  1,2,4,
-  4,2,3,
-  1,2,0,
-  2,3,0,
-  3,4,0,
-  4,1,0
-];
-
 function startGL() {
   let canvas = document.getElementById("opengl-surface"); // get canvas id from html template
   let gl = canvas.getContext("webgl");
