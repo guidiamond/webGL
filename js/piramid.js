@@ -16,8 +16,7 @@ const piramidIndices = [
   4,1,0
 ];
 
-
-function init() {
+function startGL() {
   let canvas = document.getElementById("opengl-surface"); // get canvas id from html template
   let gl = canvas.getContext("webgl");
   if (!gl) {
@@ -26,45 +25,55 @@ function init() {
   }
   gl.enable(gl.DEPTH_TEST);
   gl.frontFace(gl.CCW);
+  return [gl, canvas];
+}
 
-  const vertexShader = gl.createShader(gl.VERTEX_SHADER);
-  const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-
-  gl.shaderSource(vertexShader, vertexShaderText);
-  gl.shaderSource(fragmentShader, fragmentShaderText);
-
-  // Compile and check for errors
-  gl.compileShader(vertexShader);
-  if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
-    console.log(
-      "ERROR compiling vertex shader!",
-      gl.getShaderInfoLog(vertexShader)
-    );
-    return;
+function createShader(gl, type, source) {
+  let shader = gl.createShader(type);
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+  let success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+  if (success) {
+    return shader;
   }
-  gl.compileShader(fragmentShader);
-  if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
-    console.log(
-      "ERROR compiling fragment shader!",
-      gl.getShaderInfoLog(fragmentShader)
-    );
-    return;
-  }
+  console.log(
+    `ERROR compiling ${type} shader!`,
+    gl.getShaderInfoLog(fragmentShader)
+  );
+  gl.deleteShader(shader);
+}
+
+function createProgram(gl, vertexShader, fragmentShader) {
   // webgl entire program
-  let program = gl.createProgram();
+  const program = gl.createProgram();
   gl.attachShader(program, vertexShader);
   gl.attachShader(program, fragmentShader);
   // link program and check for errors
   gl.linkProgram(program);
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+  let success = gl.getProgramParameter(program, gl.LINK_STATUS)
+  if (!success) {
     console.log("Error linking program!", gl.getProgramInfoLog(program));
     return;
   }
   gl.validateProgram(program);
-  if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)) {
+  success = gl.getProgramParameter(program, gl.VALIDATE_STATUS)
+  if (!success) {
     console.log("Error validating program!", gl.getProgramInfoLog(program));
     return;
   }
+  return program;
+}
+
+
+function init() {
+  [gl, canvas] = startGL();
+
+  // create GLSL shaders, upload the GLSL source, compile the shaders
+  const vertexShader   = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+  const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+
+  const program = createProgram(gl, vertexShader, fragmentShader);
+
   const triangleVertexBufferObject = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexBufferObject); // bind the created array buffer to the newly created buffer
   gl.bufferData(
