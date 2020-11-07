@@ -32,13 +32,13 @@ function createProgram(gl, vertexShader, fragmentShader) {
   gl.attachShader(program, fragmentShader);
   // link program and check for errors
   gl.linkProgram(program);
-  let success = gl.getProgramParameter(program, gl.LINK_STATUS)
+  let success = gl.getProgramParameter(program, gl.LINK_STATUS);
   if (!success) {
     console.log("Error linking program!", gl.getProgramInfoLog(program));
     return;
   }
   gl.validateProgram(program);
-  success = gl.getProgramParameter(program, gl.VALIDATE_STATUS)
+  success = gl.getProgramParameter(program, gl.VALIDATE_STATUS);
   if (!success) {
     console.log("Error validating program!", gl.getProgramInfoLog(program));
     return;
@@ -46,13 +46,16 @@ function createProgram(gl, vertexShader, fragmentShader) {
   return program;
 }
 
-
 function init() {
   [gl, canvas] = startGL();
 
   // create GLSL shaders, upload the GLSL source, compile the shaders
-  const vertexShader   = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-  const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+  const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+  const fragmentShader = createShader(
+    gl,
+    gl.FRAGMENT_SHADER,
+    fragmentShaderSource
+  );
 
   const program = createProgram(gl, vertexShader, fragmentShader);
 
